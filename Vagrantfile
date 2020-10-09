@@ -21,7 +21,7 @@ Vagrant.configure(2) do |config|
     end
   #  config.vm.provision "shell", path: "bootstrap.sh"
 
-  #  # Load Balancer Node
+    # Load Balancer Node
   #  config.vm.define "loadbalancer" do |lb|
   #    lb.vm.box = "bento/ubuntu-20.04"
   #    lb.vm.hostname = "loadbalancer.example.com"
@@ -39,35 +39,31 @@ Vagrant.configure(2) do |config|
       jumpnode.vm.box = "bento/ubuntu-20.04"
       jumpnode.vm.hostname = "kjump#{i}.example.com"
       jumpnode.vm.network "private_network", ip: "172.16.16.10#{i}"
-
       jumpnode.vm.provision "shell", path: "bootstrap.sh"
     end
   end
 
 
-#    MasterCount = 1
-#    # Kubernetes Master Nodes
-#    (1..MasterCount).each do |i|
-#      config.vm.define "kmaster#{i}" do |masternode|
-#        masternode.vm.box = "bento/ubuntu-20.04"
-#        masternode.vm.hostname = "kmaster#{i}.example.com"
-#        masternode.vm.network "private_network", ip: "172.16.16.10#{i}"
+    MasterCount = 1
+    # Kubernetes Master Nodes
+    (1..MasterCount).each do |i|
+      config.vm.define "kmaster#{i}" do |masternode|
+        masternode.vm.box = "bento/ubuntu-20.04"
+        masternode.vm.hostname = "kmaster#{i}.example.com"
+        masternode.vm.network "private_network", ip: "172.16.16.10#{i}"
+        masternode.vm.provision "shell", path: "bootstrap.sh"
+      end
+    end
 
-#        masternode.vm.provision "shell", path: "bootstrap.sh"
-#      end
-#    end
-#
-#    NodeCount = 2
+    NodeCount = 2
+    # Kubernetes Worker Nodes
+    (1..NodeCount).each do |i|
+      config.vm.define "kworker#{i}" do |workernode|
+        workernode.vm.box = "bento/ubuntu-20.04"
+        workernode.vm.hostname = "kworker#{i}.example.com"
+        workernode.vm.network "private_network", ip: "172.16.16.20#{i}"
+        workernode.vm.provision "shell", path: "bootstrap.sh"
+      end
+    end
 
-#    # Kubernetes Worker Nodes
-#    (1..NodeCount).each do |i|
-#      config.vm.define "kworker#{i}" do |workernode|
-#        workernode.vm.box = "bento/ubuntu-20.04"
-#        workernode.vm.hostname = "kworker#{i}.example.com"
-#        workernode.vm.network "private_network", ip: "172.16.16.20#{i}"
-
-#        workernode.vm.provision "shell", path: "bootstrap.sh"
-#      end
-#    end
-
-#  end
+  end

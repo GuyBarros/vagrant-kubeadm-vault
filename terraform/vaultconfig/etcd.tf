@@ -19,8 +19,6 @@ resource "vault_pki_secret_backend_root_cert" "etcd_root" {
   # key_type = "rsa"
   key_bits = 2048
   # exclude_cn_from_sans = true
-  ou           = "Solution Egineering"
-  organization = "Hashicorp"
   //////////////////////////////////////////////////////////
 }
 
@@ -88,6 +86,23 @@ resource "vault_pki_secret_backend_role" "kube-etcd-peer" {
 resource "vault_pki_secret_backend_role" "kube-apiserver-etcd-client" {
   backend = vault_mount.etcd_int.path
   name    = "kube-apiserver-etcd-client"
+  # allowed_domains    = ["example.io"]
+  allow_bare_domains = true #
+  allow_subdomains   = true #
+  allow_glob_domains = true #
+  allow_any_name     = true # adjust allow_*, flags accordingly
+  allow_ip_sans      = true #
+  server_flag        = true #
+  client_flag        = true #
+  organization       = ["system:masters"]
+
+  max_ttl = "730h" # ~1 month
+  ttl     = "730h"
+}
+
+resource "vault_pki_secret_backend_role" "kube-etcd-healthcheck-client" {
+  backend = vault_mount.etcd_int.path
+  name    = "kube-etcd-healthcheck-client"
   # allowed_domains    = ["example.io"]
   allow_bare_domains = true #
   allow_subdomains   = true #

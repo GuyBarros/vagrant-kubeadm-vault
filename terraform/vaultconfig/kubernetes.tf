@@ -19,8 +19,6 @@ resource "vault_pki_secret_backend_root_cert" "kubernetes_root" {
   # key_type = "rsa"
   key_bits = 2048
   # exclude_cn_from_sans = true
-  ou           = "Solution Egineering"
-  organization = "Hashicorp"
   //////////////////////////////////////////////////////////
 }
 
@@ -64,7 +62,7 @@ resource "vault_pki_secret_backend_role" "kubernetes-ca" {
   allow_ip_sans      = true #
   server_flag        = true #
   client_flag        = true #
-
+ key_usage = ["DigitalSignature", "KeyAgreement", "KeyEncipherment","KeyUsageCertSign"]
   max_ttl = "730h" # ~1 month
   ttl     = "730h"
 }
@@ -81,7 +79,7 @@ resource "vault_pki_secret_backend_role" "kube-apiserver-kubelet-client" {
   server_flag        = true #
   client_flag        = true #
   organization       = ["system:masters"]
-
+ key_usage = ["DigitalSignature", "KeyAgreement", "KeyEncipherment","KeyUsageCertSign"]
   max_ttl = "730h" # ~1 month
   ttl     = "730h"
 }

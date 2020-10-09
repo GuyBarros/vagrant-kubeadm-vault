@@ -79,36 +79,78 @@ sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(l
  sudo apt-get update && sudo apt-get install vault
 
 
-#set Vault address and Vault token enviroment variables
-export VAULT_ADDR=http://desktop-khfd9va.lan:8200
-export VAULT_TOKEN=s.wrlHqUffYHZNY9IGJXUf3cbT
+# set Vault address and Vault token enviroment variables
+# these are all dynamically generated so it doesnt matter so much that they are on GITHUB :)
+#export VAULT_ADDR=http://desktop-khfd9va.lan:8200
+#export VAULT_TOKEN=s.wrlHqUffYHZNY9IGJXUf3cbT
+export VAULT_ADDR=https://vault.eu-guystack.original.aws.hashidemos.io:8200
+export VAULT_TOKEN=${VAULT_TOKEN}
+# set VAULT_ADDR=https://vault.eu-guystack.original.aws.hashidemos.io:8200
+# set VAULT_TOKEN=${VAULT_TOKEN}
+
 #ca-key.pem
 #ca.pem
 ################################## CHANGE THIS LATER TO USE VAULT AGENT #######################################################################
 # CA
 #####################
 #
-# apiserver.crt              apiserver.key                 ca.crt  front-proxy-ca.crt      front-proxy-client.key
-# apiserver-etcd-client.crt  apiserver-kubelet-client.crt  ca.key  front-proxy-ca.key      sa.key
-# apiserver-etcd-client.key  apiserver-kubelet-client.key  etcd    front-proxy-client.crt  sa.pub
-###
-vault write -format=json pki_int/issue/leaf-cert common_name="kubernetes" ttl="24h" > ca.json
-cat ca.json | jq -r .data.certificate > ca-cert.pem
-cat ca.json | jq -r .data.issuing_ca > ca.pem
-cat ca.json | jq -r .data.private_key > ca-key.pem
-rm ca.json
-# Admin
-vault write -format=json pki_int/issue/leaf-cert common_name="admin" ttl="24h" > admin.json
-cat admin.json | jq -r .data.certificate > admin.pem
-cat admin.json | jq -r .data.private_key > admin-key.pem
-rm admin.json
-# Nodes
-NODES=4
-for (( S=0; S<=$NODES; S++ )); do
-vault write -format=json pki_int/issue/leaf-cert common_name="node$S" ttl="24h" > node$S.json
-cat node$S.json | jq -r .data.certificate > node$S.pem
-cat node$S.json | jq -r .data.private_key > node$S-key.pem
-rm node$S.json
-done
-
-
+sudo mkdir /etc/kubernetes/pki
+sudo mkdir /etc/kubernetes/pki/etcd
+################################## CHANGE THIS LATER TO USE VAULT AGENT #######################################################################
+#       front-proxy-client.key
+#       sa.key
+# front-proxy-client.crt  sa.pub
+##### KUBERNETES ##  openssl x509 -in peer.crt -text -noout
+# CA
+vault write -format=json kubernetes_int/issue/kubernetes-ca common_name="kubernetes-ca" ttl="24h" > kubernetes-ca.json
+cat kubernetes-ca.json | jq -r .data.certificate > ca.crt
+cat kubernetes-ca.json | jq -r .data.private_key > ca.key
+rm kubernetes-ca.json
+# APISERVER
+vault write -format=json kubernetes_int/issue/kubernetes-ca common_name="kube-apiserver" ip_sans="127.0.0.1,172.16.16.111,10.96.0.1,192.168.225.193" alt_names="localhost,kjump1,kubernetes,kubernetes.default,kubernetes.default.svc,kubernetes.default.svc.cluster.local" ttl="24h" > apiserver.json
+cat apiserver.json | jq -r .data.certificate > apiserver.crt
+cat apiserver.json | jq -r .data.private_key > apiserver.key
+rm apiserver.json
+# APISERVER-KUBELET-CLIENT
+vault write -format=json kubernetes_int/issue/kube-apiserver-kubelet-client common_name="kube-apiserver-kubelet-client" ip_sans="127.0.0.1,172.16.16.111,10.96.0.1,192.168.225.193" alt_names="localhost,kjump1,kubernetes,kubernetes.default,kubernetes.default.svc,kubernetes.default.svc.cluster.local" ttl="24h" > apiserver-kubelet-client.json
+cat apiserver-kubelet-client.json | jq -r .data.certificate > apiserver-kubelet-client.crt
+cat apiserver-kubelet-client.json | jq -r .data.private_key > apiserver-kubelet-client.key
+rm apiserver-kubelet-client.json
+# APISERVER-ETCD-CLIENT
+vault write -format=json etcd_int/issue/kube-apiserver-etcd-client common_name="kube-apiserver-kubelet-client"  ttl="24h" > kube-apiserver-etcd-client.json
+cat kube-apiserver-etcd-client.json | jq -r .data.certificate > kube-apiserver-etcd-client.crt
+cat kube-apiserver-etcd-client.json | jq -r .data.private_key > kube-apiserver-etcd-client.key
+rm kube-apiserver-etcd-client.json
+##### ETCD
+ca.crt  ca.key  healthcheck-client.crt  healthcheck-client.key  peer.crt  peer.key  server.crt  server.key
+# CA
+vault write -format=json etcd_int/issue/etcd-ca common_name="etcd-ca"  ttl="24h" > etcd-ca.json
+cat etcd-ca.json | jq -r .data.certificate > ca.crt
+cat etcd-ca.json | jq -r .data.private_key > ca.key
+rm etcd-ca.json
+# healthcheck-client
+vault write -format=json etcd_int/issue/kube-etcd-healthcheck-client common_name="kube-etcd-healthcheck-client"  ttl="24h" > healthcheck-client.json
+cat healthcheck-client.json | jq -r .data.certificate > healthcheck-client.crt
+cat healthcheck-client.json | jq -r .data.private_key > healthcheck-client.key
+rm healthcheck-client.json
+# peer
+vault write -format=json etcd_int/issue/kube-etcd-peer common_name="kjump1" ip_sans="127.0.0.1,192.168.225.193" alt_names="localhost,kjump1"  ttl="24h" > kube-etcd-peer.json
+cat kube-etcd-peer.json | jq -r .data.certificate > peer.crt
+cat kube-etcd-peer.json | jq -r .data.private_key > peer.key
+rm kube-etcd-peer.json
+# server
+vault write -format=json etcd_int/issue/etcd-ca common_name="kjump1" ip_sans="127.0.0.1,192.168.225.193" alt_names="localhost,kjump1"  ttl="24h" > server.json
+cat server.json | jq -r .data.certificate > server.crt
+cat server.json | jq -r .data.private_key > server.key
+rm server.json
+##### PROXY
+# front-proxy-ca
+vault write -format=json proxy_int/issue/front-proxy-ca common_name="front-proxy-ca"  ttl="24h" > front-proxy-ca.json
+cat front-proxy-ca.json | jq -r .data.certificate > front-proxy-ca.crt
+cat front-proxy-ca.json | jq -r .data.private_key > front-proxy-ca.key
+rm front-proxy-ca.json
+# front-proxy-client
+vault write -format=json proxy_int/issue/front-proxy-ca common_name="front-proxy-client"  ttl="24h" > front-proxy-client.json
+cat front-proxy-client.json | jq -r .data.certificate > front-proxy-client.crt
+cat front-proxy-client.json | jq -r .data.private_key > front-proxy-client.key
+rm front-proxy-client.json

@@ -44,29 +44,30 @@ Vagrant.configure(2) do |config|
     end
   end
 
-  MasterCount = 1
-  # Kubernetes Master Nodes
-  (1..MasterCount).each do |i|
-    config.vm.define "kmaster#{i}" do |masternode|
-      masternode.vm.box = "bento/ubuntu-20.04"
-      masternode.vm.hostname = "kmaster#{i}.example.com"
-      masternode.vm.network "private_network", ip: "172.16.16.10#{i}"
 
-      masternode.vm.provision "shell", path: "bootstrap.sh"
-    end
-  end
+#    MasterCount = 1
+#    # Kubernetes Master Nodes
+#    (1..MasterCount).each do |i|
+#      config.vm.define "kmaster#{i}" do |masternode|
+#        masternode.vm.box = "bento/ubuntu-20.04"
+#        masternode.vm.hostname = "kmaster#{i}.example.com"
+#        masternode.vm.network "private_network", ip: "172.16.16.10#{i}"
 
-  NodeCount = 2
+#        masternode.vm.provision "shell", path: "bootstrap.sh"
+#      end
+#    end
+#
+#    NodeCount = 2
 
-  # Kubernetes Worker Nodes
-  (1..NodeCount).each do |i|
-    config.vm.define "kworker#{i}" do |workernode|
-      workernode.vm.box = "bento/ubuntu-20.04"
-      workernode.vm.hostname = "kworker#{i}.example.com"
-      workernode.vm.network "private_network", ip: "172.16.16.20#{i}"
+#    # Kubernetes Worker Nodes
+#    (1..NodeCount).each do |i|
+#      config.vm.define "kworker#{i}" do |workernode|
+#        workernode.vm.box = "bento/ubuntu-20.04"
+#        workernode.vm.hostname = "kworker#{i}.example.com"
+#        workernode.vm.network "private_network", ip: "172.16.16.20#{i}"
 
-      workernode.vm.provision "shell", path: "bootstrap.sh"
-    end
-  end
+#        workernode.vm.provision "shell", path: "bootstrap.sh"
+#      end
+#    end
 
-end
+#  end

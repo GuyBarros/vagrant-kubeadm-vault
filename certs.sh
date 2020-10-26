@@ -11,7 +11,9 @@ sudo mkdir /etc/kubernetes/pki/etcd
 #
 #       sa.key
 #       sa.pub
-##### KUBERNETES ##  openssl x509 -in peer.crt -text -noout
+##### KUBERNETES
+##  openssl x509 -in peer.crt -text -noout
+## openssl verify -verbose -CAfile cacert.pem  server.crt
 # CA
 vault write -format=json kubernetes_int/issue/kubernetes-ca common_name="kubernetes-ca" ttl="24h" > kubernetes-ca.json
 cat kubernetes-ca.json | jq -r .data.certificate > ca.crt
@@ -41,7 +43,7 @@ rm kube-apiserver-etcd-client.json
 sudo cp kube-apiserver-etcd-client.crt /etc/kubernetes/pki/kube-apiserver-etcd-client.crt
 sudo cp kube-apiserver-etcd-client.key /etc/kubernetes/pki/kube-apiserver-etcd-client.key
 ##### ETCD
-ca.crt  ca.key  healthcheck-client.crt  healthcheck-client.key  peer.crt  peer.key  server.crt  server.key
+#ca.crt  ca.key  healthcheck-client.crt  healthcheck-client.key  peer.crt  peer.key  server.crt  server.key
 # CA
 vault write -format=json etcd_int/issue/etcd-ca common_name="etcd-ca"  ttl="24h" > etcd-ca.json
 cat etcd-ca.json | jq -r .data.certificate > ca.crt
